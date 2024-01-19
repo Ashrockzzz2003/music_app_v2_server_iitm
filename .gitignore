@@ -1,1 +1,4 @@
 /.venv/
+/db/__pycache__/
+/middleware/__pycache__/
+/controller/__pycache__/
