@@ -1,5 +1,4 @@
-from flask import Blueprint, request, jsonify, make_response, session
-
+from flask import Blueprint, jsonify, make_response
 
 user = Blueprint("user", __name__)
 

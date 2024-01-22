@@ -17,6 +17,11 @@ CREATE TABLE IF NOT EXISTS "userRole" (
     "roleId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "roleName" VARCHAR(50) NOT NULL
 );
+
+INSERT INTO "userRole" ("roleName") VALUES ('ADMIN');
+INSERT INTO "userRole" ("roleName") VALUES ('CREATOR');
+INSERT INTO "userRole" ("roleName") VALUES ('USER');
+
 CREATE TABLE IF NOT EXISTS "userData" (
     "userId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "userFullName" VARCHAR(255) NOT NULL,
@@ -32,6 +37,13 @@ CREATE TABLE IF NOT EXISTS "userData" (
     CHECK ("userGender" IN ('M', 'F', 'O')),
     CHECK ("userAccountStatus" IN ('0', '1', '2'))
 );
+
+INSERT INTO "userData" ("userFullName", "userEmail", "userPassword", "userDob", "userGender", "userAccountStatus", "userRoleId") 
+VALUES ("Ashwin Narayanan S", 'admin@music.io', "password", '2003-10-13', "M", "1", 1);
+
+INSERT INTO "userData" ("userFullName", "userEmail", "userPassword", "userDob", "userGender", "userAccountStatus", "userRoleId") 
+VALUES ("Vaisakhkrishnan K", 'k_vaisakh@music.io', "password", '2001-10-13', "M", "1", 3);
+
 CREATE TABLE IF NOT EXISTS "userFollows" (
     "userId" INTEGER NOT NULL,
     "followsUserId" INTEGER NOT NULL,
