@@ -26,6 +26,21 @@ INSERT INTO "userRole" ("roleName") VALUES ('ADMIN');
 INSERT INTO "userRole" ("roleName") VALUES ('CREATOR');
 INSERT INTO "userRole" ("roleName") VALUES ('USER');
 
+CREATE TABLE IF NOT EXISTS "userRegister" (
+    "registrationId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userFullName" VARCHAR(255) NOT NULL,
+    "userEmail" VARCHAR(255) NOT NULL UNIQUE,
+    "userPassword" VARCHAR(255) NOT NULL,
+    "userDob" VARCHAR(255) NOT NULL,
+    "userGender" CHAR(1) NOT NULL,
+    "userRoleId" INTEGER NOT NULL,
+    "userOtp" VARCHAR(6) NOT NULL,
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "lastUpdatedAt" TEXT NULL,
+    FOREIGN KEY ("userRoleId") REFERENCES "userRole"("roleId"),
+    CHECK ("userGender" IN ('M', 'F', 'O'))
+);
+
 CREATE TABLE IF NOT EXISTS "userData" (
     "userId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "userFullName" VARCHAR(255) NOT NULL,
@@ -40,6 +55,14 @@ CREATE TABLE IF NOT EXISTS "userData" (
     FOREIGN KEY ("userRoleId") REFERENCES "userRole"("roleId"),
     CHECK ("userGender" IN ('M', 'F', 'O')),
     CHECK ("userAccountStatus" IN ('0', '1', '2'))
+);
+
+CREATE TABLE IF NOT EXISTS "forgotPasswordOtp"(
+    "userId" INTEGER NOT NULL,
+    "userOtp" VARCHAR(6) NOT NULL,
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ("userId", "userOtp"),
+    FOREIGN KEY ("userId") REFERENCES "userData"("userId")
 );
 
 INSERT INTO "userData" ("userFullName", "userEmail", "userPassword", "userDob", "userGender", "userAccountStatus", "userRoleId") 

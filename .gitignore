@@ -2,3 +2,6 @@
 /db/__pycache__/
 /middleware/__pycache__/
 /controller/__pycache__/
+/middleware/mail/__pycache__/
+/middleware/mail/mailer.py
+/middleware/helper/__pycache__/

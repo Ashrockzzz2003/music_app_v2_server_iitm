@@ -1,2 +1,6 @@
 flask
 pycryptodome
+celery
+redis
+smtplib
+ssl
