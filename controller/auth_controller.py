@@ -206,6 +206,9 @@ def register():
     
 @auth.route("/register/verify", methods=["POST"])
 def registerVerify():
+    {
+        "otp": "string (6 digit OTP)"
+    }
     try:
         if not request.is_json:
             return make_response(jsonify({"message": "Missing JSON in request."}), 400)
