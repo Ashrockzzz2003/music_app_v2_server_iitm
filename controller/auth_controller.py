@@ -1,6 +1,6 @@
 # Auth Controller
 
-from flask import Blueprint, request, jsonify, make_response, session
+from flask import Blueprint, request, jsonify, make_response
 from middleware.dataValidator import (
     validateEmail,
     validatePassword,

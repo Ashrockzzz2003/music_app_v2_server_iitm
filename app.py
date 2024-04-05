@@ -2,6 +2,7 @@ from flask import Flask
 from controller.auth_controller import auth
 from controller.user_controller import user
 from controller.admin_controller import admin
+from controller.public_controller import public
 
 from db.init_db import reinitializeDatabase
 from middleware.keyGen import generateKey
@@ -15,10 +16,11 @@ app.config["UPLOAD_FOLDER"] = "static"
 app.register_blueprint(auth, url_prefix="/api/auth")
 app.register_blueprint(user, url_prefix="/api/user")
 app.register_blueprint(admin, url_prefix="/api/admin")
+app.register_blueprint(public, url_prefix="/api/public")
 
 if __name__ == "__main__":
     # Clear Data and Reinitialize Database
-    reinitializeDatabase()
+    # reinitializeDatabase()
     # Generate RSA Keys
-    generateKey()
+    # generateKey()
     app.run(debug=True, port=5000)
