@@ -174,12 +174,12 @@ def register():
             db_cursor.execute(
                 "UPDATE userRegister SET userFullName = ?, userPassword = ?, userDob = ?, userGender = ?, userOtp = ?, lastUpdatedAt = CURRENT_TIMESTAMP WHERE userEmail = ?",
                 (
-                    data["userFullName"],
-                    data["userPassword"],
-                    data["userDob"],
-                    data["userGender"],
-                    theOtp,
-                    data["userEmail"],
+                    str(data["userFullName"]).strip(),
+                    str(data["userPassword"]),
+                    str(data["userDob"]).strip(),
+                    str(data["userGender"]).strip(),
+                    str(theOtp).strip(),
+                    (str(data["userEmail"]).strip()).lower(),
                 ),
             )
             db_connection.commit()
@@ -194,12 +194,12 @@ def register():
             db_cursor.execute(
                 "INSERT INTO userRegister (userFullName, userEmail, userPassword, userDob, userGender, userRoleId, userOtp) VALUES (?, ?, ?, ?, ?, 2, ?)",
                 (
-                    data["userFullName"],
-                    data["userEmail"],
-                    data["userPassword"],
-                    data["userDob"],
-                    data["userGender"],
-                    theOtp,
+                    str(data["userFullName"]).strip(),
+                    (str(data["userEmail"]).strip()).lower(),
+                    str(data["userPassword"]),
+                    str(data["userDob"]).strip(),
+                    str(data["userGender"]).strip(),
+                    str(theOtp).strip(),
                 ),
             )
 
@@ -374,6 +374,8 @@ def forgotPassword():
 
         if not (validateEmail(data["userEmail"])):
             return make_response(jsonify({"message": "Invalid Email."}), 400)
+        
+        data["userEmail"] = str(data["userEmail"]).lower().strip()
 
         db_connection = sqlite3.connect("db/app_data.db")
         db_cursor = db_connection.cursor()

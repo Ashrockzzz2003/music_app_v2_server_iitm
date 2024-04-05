@@ -57,3 +57,21 @@ def validateOtp(otp):
     
     return False
 
+
+def validateNonEmptyString(inputString):
+    if type(inputString) != str:
+        return False
+
+    if len(inputString) > 0:
+        return True
+
+    return False
+
+
+def isValidLoginToken(token):
+    if "userId" in token and "userAccountStatus" in token and "userRoleId" in token and type(token["userId"]) == int and type(token["userAccountStatus"]) == str and type(token["userRoleId"]) == int and token["userAccountStatus"] == '1':
+        return True
+
+    
+    return False
+

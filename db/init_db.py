@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS "userRegister" (
     "userRoleId" INTEGER NOT NULL,
     "userOtp" VARCHAR(6) NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    "lastUpdatedAt" TEXT NULL,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("userRoleId") REFERENCES "userRole"("roleId"),
     CHECK ("userGender" IN ('M', 'F', 'O'))
 );
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS "userData" (
     "userAccountStatus" CHAR(1) NOT NULL,
     "userRoleId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    "lastUpdatedAt" TEXT NULL,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("userRoleId") REFERENCES "userRole"("roleId"),
     CHECK ("userGender" IN ('M', 'F', 'O')),
     CHECK ("userAccountStatus" IN ('0', '1', '2'))
@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS "forgotPasswordOtp"(
     "userId" INTEGER NOT NULL,
     "userOtp" VARCHAR(6) NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY ("userId", "userOtp"),
     FOREIGN KEY ("userId") REFERENCES "userData"("userId")
 );
@@ -87,20 +88,20 @@ CREATE TABLE IF NOT EXISTS "genreData" (
     "createdBy" INTEGER NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "lastUpdatedBy" INTEGER NOT NULL,
-    "lastUpdatedAt" TEXT NULL,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
     FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
     CHECK ("isActive" IN ('0', '1'))
 );
 CREATE TABLE IF NOT EXISTS "languageData" (
     "languageId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "languageName" VARCHAR(255) NOT NULL,
-    "languageDescription" VARCHAR(255) NULL,
+    "languageCode" VARCHAR(255) NOT NULL,
+    "languageName" VARCHAR(255) NULL,
     "isActive" CHAR(1) NOT NULL,
     "createdBy" INTEGER NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "lastUpdatedBy" INTEGER NOT NULL,
-    "lastUpdatedAt" TEXT NULL,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
     FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
     CHECK ("isActive" IN ('0', '1'))
@@ -123,7 +124,7 @@ CREATE TABLE IF NOT EXISTS "songData" (
     "createdBy" INTEGER NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "lastUpdatedBy" INTEGER NOT NULL,
-    "lastUpdatedAt" TEXT NULL,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("songGenreId") REFERENCES "genreData"("genreId"),
     FOREIGN KEY ("songLanguageId") REFERENCES "languageData"("languageId"),
     FOREIGN KEY ("songAlbumId") REFERENCES "albumData"("albumId"),
@@ -168,7 +169,7 @@ CREATE TABLE IF NOT EXISTS "albumData" (
     "createdBy" INTEGER NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "lastUpdatedBy" INTEGER NOT NULL,
-    "lastUpdatedAt" TEXT NULL,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
     FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
     CHECK ("isActive" IN ('0', '1'))
@@ -205,7 +206,7 @@ CREATE TABLE IF NOT EXISTS "playlistData" (
     "createdBy" INTEGER NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "lastUpdatedBy" INTEGER NOT NULL,
-    "lastUpdatedAt" TEXT NULL,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
     FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
     CHECK ("isActive" IN ('0', '1')),
