@@ -28,12 +28,12 @@
         - [x] Update Genre by ID
         - [x] Toggle Genre Status by ID
     - [ ] Song
-        - [ ] Create New Song
+        - [x] Create New Song
         - [ ] Query All Songs
-        - [ ] Get Song by ID
-        - [ ] Update Song by ID
+        - [x] Get Song by ID
+        - [x] Update Song by ID
         - [ ] Delete Song by ID
-        - [ ] Toggle Song Status by ID
+        - [x] Toggle Song Status by ID
     - [ ] Playlist
         - [ ] Create New Playlist
         - [ ] Query All Playlists (All Public Playlists)
@@ -89,14 +89,14 @@
         - [ ] Remove Song from Playlist
         - [ ] Like/Dislike Song by ID
 - [ ] Creator
-    - [ ] Song
-        - [ ] Create New Song
+    - [x] Song
+        - [x] Create New Song
         - [ ] Query All Songs
         - [ ] Query My Songs (All Songs of User)
-        - [ ] Get Song by ID
-        - [ ] Update Song by ID
+        - [x] Get Song by ID
+        - [x] Update Song by ID
         - [ ] Delete Song by ID
-        - [ ] Toggle Song Status by ID
+        - [x] Toggle Song Status by ID
     - [ ] Playlist
         - [ ] Create New Playlist
         - [ ] Query All Playlists (All Public Playlists)

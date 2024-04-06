@@ -75,3 +75,21 @@ def isValidLoginToken(token):
     
     return False
 
+def validateInteger(inputInt):
+    if type(inputInt) != str:
+        return False
+    
+    if inputInt.isdigit():
+        return True
+    
+    return False
+
+def validateSongDuration(songDuration):
+    if type(songDuration) != str:
+        return False
+
+    durationRegex = r"^\d{2}:\d{2}:\d{2}$"
+    if re.fullmatch(durationRegex, songDuration):
+        return True
+    
+    return False
