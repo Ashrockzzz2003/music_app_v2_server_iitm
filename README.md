@@ -15,6 +15,7 @@
     - [x] Register (OTP-based)
     - [x] Forgot Password (OTP-based)
 - [x] Admin
+    - [x] Get Profile
     - [x] Language
         - [x] Create New Language
         - [x] Get All Languages
@@ -68,6 +69,7 @@
         - [x] Get Genre by ID
 - [ ] User
     - [ ] Register as Creator
+    - [x] Get Profile
     - [ ] Playlist
         - [ ] Create New Playlist
         - [ ] Query All Playlists (All Public Playlists)
@@ -89,6 +91,7 @@
         - [ ] Remove Song from Playlist
         - [ ] Like/Dislike Song by ID
 - [ ] Creator
+    - [x] Get Profile
     - [x] Song
         - [x] Create New Song
         - [ ] Query All Songs
