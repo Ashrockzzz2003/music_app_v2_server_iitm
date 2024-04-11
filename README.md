@@ -30,7 +30,7 @@
         - [x] Toggle Genre Status by ID
     - [ ] Song
         - [x] Create New Song
-        - [ ] Query All Songs
+        - [x] Query All Songs
         - [x] Get Song by ID
         - [x] Update Song by ID
         - [ ] Delete Song by ID
@@ -60,13 +60,20 @@
         - [ ] Query All Songs by Artist
         - [ ] Query All Albums by Artist
     - [ ] Stats
-- [x] Public
+- [ ] Public
     - [x] Language
         - [x] Get All Languages
         - [x] Get Language by ID
     - [x] Genre
         - [x] Get All Genres
         - [x] Get Genre by ID
+    - [x] Song
+        - [x] Query All Songs
+        - [x] Get Song by ID
+    - [ ] Album
+        - [x] Get All Albums
+        - [ ] Query All Albums
+        - [x] Get Album by ID
 - [ ] User
     - [x] Register as Creator
     - [x] Get Profile
@@ -85,7 +92,7 @@
         - [ ] Query All Albums
         - [x] Get Album by ID
     - [ ] Song
-        - [ ] Query All Songs
+        - [x] Query All Songs
         - [x] Get Song by ID
         - [ ] Report Song by ID
         - [ ] Add Song to Playlist
@@ -95,7 +102,7 @@
     - [x] Get Profile
     - [x] Song
         - [x] Create New Song
-        - [ ] Query All Songs
+        - [x] Query All Songs
         - [ ] Query My Songs
         - [x] My Songs (All Songs of User)
         - [x] Get Song by ID

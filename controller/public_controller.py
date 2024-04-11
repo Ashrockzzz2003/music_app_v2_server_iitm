@@ -208,4 +208,69 @@ def getAllAlbums():
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)
 
+@public.route("/song/search", methods=["GET"])
+def songSearch():
+    # Search by songName, songGenre, songArtist, songLanguage, songAlbum
 
+    try:
+        if not request.args.get("q"):
+            # Select random 20 songs
+            db_connection = sqlite3.connect("db/app_data.db")
+            db_cursor = db_connection.cursor()
+
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData as u on u.userId = s.createdBy WHERE s.isActive='1' ORDER BY RANDOM() LIMIT 20"
+            )
+
+            songData = db_cursor.fetchall()
+            db_connection.close()
+
+            songData = [dict(zip([key[0] for key in db_cursor.description], song)) for song in songData]
+
+            return make_response(jsonify({"data": songData, "message": "Success"}), 200)
+
+
+        search_query = request.args.get("q")
+        genre_id = '0'
+        language_id = '0'
+
+        if request.args.get("g"):
+            genre_id = request.args.get("g")
+
+        if request.args.get("l"):
+            language_id = request.args.get("l")
+
+        search_query = str(search_query).lower()
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        if (genre_id != '0' and language_id != '0'):
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData AS u ON u.userId = s.createdBy WHERE (lower(s.songName) LIKE ? OR lower(u.userFullName) LIKE ? OR lower(g.genreName) LIKE ? OR lower(l.languageName) LIKE ?) AND s.isActive='1' AND s.songGenreId = ? AND s.songLanguageId = ?", (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", genre_id, language_id)
+            )
+        elif (genre_id != '0'):
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData AS u ON u.userId = s.createdBy WHERE (lower(s.songName) LIKE ? OR lower(u.userFullName) LIKE ? OR lower(g.genreName) LIKE ? OR lower(l.languageName) LIKE ?) AND s.isActive='1' AND s.songGenreId = ?", (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", genre_id)
+            )
+        elif (language_id != '0'):
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData AS u ON u.userId = s.createdBy WHERE (lower(s.songName) LIKE ? OR lower(u.userFullName) LIKE ? OR lower(g.genreName) LIKE ? OR lower(l.languageName) LIKE ?) AND s.isActive='1' AND s.songLanguageId = ?", (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", language_id)
+            )
+        else:
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData AS u ON u.userId = s.createdBy WHERE (lower(s.songName) LIKE ? OR lower(u.userFullName) LIKE ? OR lower(g.genreName) LIKE ? OR lower(l.languageName) LIKE ?) AND s.isActive='1'", (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%",)
+            )
+
+        songData = db_cursor.fetchall()
+        db_connection.close()
+
+        songData = [dict(zip([key[0] for key in db_cursor.description], song)) for song in songData]
+
+        return make_response(jsonify({"data": songData, "message": "Success"}), 200)
+    
+    except Exception as e:
+        fs = open("logs/public.log", "a")
+        fs.write(f"{datetime.now()} | songSearch | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)
