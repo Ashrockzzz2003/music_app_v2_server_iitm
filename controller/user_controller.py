@@ -185,3 +185,5 @@ def iWannaBeACreator():
         fs.write(f"{datetime.now()} | iWannaBeACreator | {e}\n")
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)
+
+

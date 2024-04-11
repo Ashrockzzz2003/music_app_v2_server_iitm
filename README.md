@@ -44,15 +44,15 @@
         - [ ] Add Song to Playlist
         - [ ] Remove Song from Playlist
         - [ ] Toggle Playlist Status (Public/Private) by ID
-    - [ ] Album
-        - [ ] Create New Album
+    - [x] Album
+        - [x] Create New Album
         - [ ] Query All Albums
-        - [ ] Get Album by ID
-        - [ ] Update Album by ID
+        - [x] Get Album by ID
+        - [x] Update Album by ID
         - [ ] Delete Album by ID
-        - [ ] Add Song to Album
-        - [ ] Remove Song from Album
-        - [ ] Toggle Album Status by ID
+        - [x] Add Song to Album
+        - [x] Remove Song from Album
+        - [x] Toggle Album Status by ID
     - [ ] Artist
         - [ ] Query All Artists
         - [ ] Get Artist by ID
@@ -81,11 +81,12 @@
         - [ ] Remove Song from Playlist
         - [ ] Toggle Playlist Status (Public/Private) by ID
     - [ ] Album
+        - [x] All Albums
         - [ ] Query All Albums
-        - [ ] Get Album by ID
+        - [x] Get Album by ID
     - [ ] Song
         - [ ] Query All Songs
-        - [ ] Get Song by ID
+        - [x] Get Song by ID
         - [ ] Report Song by ID
         - [ ] Add Song to Playlist
         - [ ] Remove Song from Playlist
@@ -95,7 +96,8 @@
     - [x] Song
         - [x] Create New Song
         - [ ] Query All Songs
-        - [ ] Query My Songs (All Songs of User)
+        - [ ] Query My Songs
+        - [x] My Songs (All Songs of User)
         - [x] Get Song by ID
         - [x] Update Song by ID
         - [ ] Delete Song by ID
@@ -111,15 +113,15 @@
         - [ ] Remove Song from Playlist
         - [ ] Toggle Playlist Status (Public/Private) by ID
     - [ ] Album
-        - [ ] Create New Album
+        - [x] Create New Album
         - [ ] Query All Albums
         - [ ] Query My Albums (All Albums of User)
-        - [ ] Get Album by ID
-        - [ ] Update Album by ID
+        - [x] Get Album by ID
+        - [x] Update Album by ID
         - [ ] Delete Album by ID
-        - [ ] Add Song to Album
-        - [ ] Remove Song from Album
-        - [ ] Toggle Album Status by ID
+        - [x] Add Song to Album
+        - [x] Remove Song from Album
+        - [x] Toggle Album Status by ID
 
 
 `Ashwin Narayanan S`
