@@ -68,7 +68,7 @@
         - [x] Get All Genres
         - [x] Get Genre by ID
 - [ ] User
-    - [ ] Register as Creator
+    - [x] Register as Creator
     - [x] Get Profile
     - [ ] Playlist
         - [ ] Create New Playlist

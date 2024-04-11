@@ -50,10 +50,10 @@ def login():
             return make_response(jsonify({"message": "Missing parameters."}), 400)
 
         if not (validateEmail(data["userEmail"])):
-            return make_response(jsonify({"message": "Invalid Email."}), 400)
+            return make_response(jsonify({"message": "Invalid Email format."}), 400)
 
         if not (validatePassword(data["userPassword"])):
-            return make_response(jsonify({"message": "Invalid Password."}), 400)
+            return make_response(jsonify({"message": "Invalid Password format."}), 400)
 
         db_connection = sqlite3.connect("db/app_data.db")
         db_cursor = db_connection.cursor()
@@ -68,11 +68,11 @@ def login():
 
         if user_data == None:
             return make_response(
-                jsonify({"message": "Invalid Email or Password."}), 404
+                jsonify({"message": "Invalid Email or Password."}), 400
             )
 
         if user_data[6] == "0":
-            return make_response(jsonify({"message": "Your account is blocked."}), 403)
+            return make_response(jsonify({"message": "Your account is blocked."}), 400)
 
         token = generateToken(
             {
@@ -156,7 +156,7 @@ def register():
                 jsonify(
                     {"message": "Already an account exists with the same email ID."}
                 ),
-                409,
+                400,
             )
 
         # Generate OTP.

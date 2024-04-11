@@ -7,7 +7,11 @@ from controller.public_controller import public
 from db.init_db import reinitializeDatabase
 from middleware.keyGen import generateKey
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
+
 
 app.secret_key = "OkvzD0IvqdPOa47J0q3z5VaGy2cCDoP6V5GEfO0kGeq3vFfk1cb7vs8QMJiwF0nGIcXWCKoqD6wE6h1mUQZdQu7hR3FLjDwyRCCOY6bfuLBpr+WgQIDAQABAoGAENt4zTvrXc7Sig4N3tUsJ"
 app.config["UPLOAD_FOLDER"] = "static"
@@ -22,5 +26,5 @@ if __name__ == "__main__":
     # Clear Data and Reinitialize Database
     # reinitializeDatabase()
     # Generate RSA Keys
-    # generateKey()
+    generateKey()
     app.run(debug=True, port=5000)

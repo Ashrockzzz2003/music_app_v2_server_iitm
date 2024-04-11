@@ -4,3 +4,4 @@ celery
 redis
 smtplib
 ssl
+flask_cors
