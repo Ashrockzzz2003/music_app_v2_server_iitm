@@ -26,5 +26,5 @@ if __name__ == "__main__":
     # Clear Data and Reinitialize Database
     # reinitializeDatabase()
     # Generate RSA Keys
-    generateKey()
+    # generateKey()
     app.run(debug=True, port=5000)

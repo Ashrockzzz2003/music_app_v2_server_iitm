@@ -4,7 +4,7 @@ from datetime import datetime
 from middleware.dataValidator import validateNonEmptyString, isValidLoginToken, validateInteger, validateUserDob, validateSongDuration
 from middleware.tokenValidator import validateToken
 
-import sqlite3
+import sqlite3, os
 
 admin = Blueprint("admin", __name__)
 
@@ -1644,7 +1644,7 @@ def getSongById(song_id):
         db_connection = sqlite3.connect("db/app_data.db")
         db_cursor = db_connection.cursor()
         db_cursor.execute(
-            """SELECT s.songName, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId
+            """SELECT s.songName, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId
                         FROM songData AS s
                         JOIN genreData AS g ON s.songGenreId = g.genreId 
                         JOIN languageData AS l ON s.songLanguageId = l.languageId
@@ -1737,7 +1737,7 @@ def getMySongs():
         db_connection = sqlite3.connect("db/app_data.db")
         db_cursor = db_connection.cursor()
         db_cursor.execute(
-            """SELECT s.songName, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId
+            """SELECT s.songName, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId
                         FROM songData AS s
                         JOIN genreData AS g ON s.songGenreId = g.genreId 
                         JOIN languageData AS l ON s.songLanguageId = l.languageId
@@ -1759,6 +1759,134 @@ def getMySongs():
     except Exception as e:
         fs = open("logs/admin.log", "a")
         fs.write(f"{datetime.now()} | getSongById | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)
+
+@admin.route("/song/<int:song_id>/delete", methods=["POST"])
+def deleteSong(song_id):
+    try:
+        # Authorize
+        # Get Request Headers
+        tokenData = request.headers.get("Authorization")
+
+        if tokenData == None or len(tokenData.split(" ")) != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        secretToken = tokenData.split(" ")[1]
+
+        # Validate Token
+        if len(str(secretToken)) == 0 or secretToken is None:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        if len(secretToken.split(",")) != 3:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        decryptedToken = validateToken(
+            secretToken.split(",")[0],
+            secretToken.split(",")[1],
+            secretToken.split(",")[2],
+        )
+
+        if decryptedToken == -2:
+            return make_response(jsonify({"message": "Session Expired"}), 401)
+        elif decryptedToken == -1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        if decryptedToken["userRoleId"] != 1 and decryptedToken["userRoleId"] != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        # Validate Token
+        if not isValidLoginToken(decryptedToken):
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        userId = decryptedToken["userId"]
+
+        # check if user exists
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT userId, userAccountStatus, userRoleId FROM userData WHERE userId = ?",
+            (userId,),
+        )
+        user_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if user_data == None:
+            return make_response(jsonify({"message": "User not found."}), 404)
+        
+        # Check if user is admin or creator
+
+        if user_data[2] != 1 and user_data[2] != 2 and user_data[1] != "1":
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        # Check if song exists
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songData WHERE songId = ?",
+            (song_id,),
+        )
+
+        song_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if song_data == None:
+            return make_response(jsonify({"message": "Song not found."}), 404)
+        
+        song_data = dict(zip([key[0] for key in db_cursor.description], song_data))
+
+        # Check if song is of creator
+
+        if song_data["createdBy"] != userId and user_data[2] == 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        # Delete song
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "DELETE FROM playlistSongData WHERE songId = ?",
+            (song_id,),
+        )
+
+        db_cursor.execute(
+            "DELETE FROM userHistory WHERE songId = ?",
+            (song_id,),
+        )
+
+        db_cursor.execute(
+            "DELETE FROM songLikeDislikeData WHERE songId = ?",
+            (song_id,),
+        )
+
+        db_cursor.execute(
+            "DELETE FROM songData WHERE songId = ?",
+            (song_id,),
+        )
+
+        db_connection.commit()
+        db_connection.close()
+
+        # Delete files from /song/audio and /song/poster
+
+        if os.path.exists(f"static/song/audio/{song_id}.mp3"):
+            os.remove(f"static/song/audio/{song_id}.mp3")
+
+        if os.path.exists(f"static/song/poster/{song_id}.png"):
+            os.remove(f"static/song/poster/{song_id}.png")
+
+        
+        return make_response(jsonify({"message": "Song deleted successfully."}), 200)
+
+
+
+    except Exception as e:
+        fs = open("logs/admin.log", "a")
+        fs.write(f"{datetime.now()} | deleteSong | {e}\n")
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)
 
@@ -2716,3 +2844,118 @@ def removeSongFromAlbum(album_id, song_id):
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)      
 
+@admin.route("/album/<int:album_id>/delete", methods=["POST"])
+def deleteAlbum(album_id):
+    try:
+        # Authorize
+        # Get Request Headers
+        tokenData = request.headers.get("Authorization")
+
+        if tokenData == None or len(tokenData.split(" ")) != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        secretToken = tokenData.split(" ")[1]
+
+        # Validate Token
+        if len(str(secretToken)) == 0 or secretToken is None:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        if len(secretToken.split(",")) != 3:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        decryptedToken = validateToken(
+            secretToken.split(",")[0],
+            secretToken.split(",")[1],
+            secretToken.split(",")[2],
+        )
+
+        if decryptedToken == -2:
+            return make_response(jsonify({"message": "Session Expired"}), 401)
+        elif decryptedToken == -1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        if decryptedToken["userRoleId"] != 1 and decryptedToken["userRoleId"] != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        # Validate Token
+        if not isValidLoginToken(decryptedToken):
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        userId = decryptedToken["userId"]
+
+        # check if user exists
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT userId, userAccountStatus, userRoleId FROM userData WHERE userId = ?",
+            (userId,),
+        )
+        user_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if user_data == None:
+            return make_response(jsonify({"message": "User not found."}), 404)
+        
+        # Check if user is admin or creator
+
+        if user_data[2] != 1 and user_data[2] != 2 and user_data[1] != "1":
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        # Check if album exists
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM albumData WHERE albumId = ?",
+            (album_id,),
+        )
+
+        album_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if album_data == None:
+            return make_response(jsonify({"message": "Album not found."}), 404)
+        
+        album_data = dict(zip([key[0] for key in db_cursor.description], album_data))
+
+        if album_data["createdBy"] != userId and user_data[2] == 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        # Delete Album
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "DELETE FROM albumLikeDislikeData WHERE albumId = ?",
+            (album_id,),
+        )
+
+        db_cursor.execute(
+            "UPDATE songData SET songAlbumId = NULL WHERE songAlbumId = ?",
+            (album_id,),
+        )
+
+        db_cursor.execute(
+            "DELETE FROM albumData WHERE albumId = ?",
+            (album_id,),
+        )
+
+        db_connection.commit()
+        db_connection.close()
+
+        # Delete Album Image
+
+        if os.path.exists(f"static/album/{album_id}.png"):
+            os.remove(f"static/album/{album_id}.png")
+
+        return make_response(jsonify({"message": "Album deleted successfully."}), 200)
+
+
+    except Exception as e:
+        fs = open("logs/admin.log", "a")
+        fs.write(f"{datetime.now()} | deleteAlbum | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)

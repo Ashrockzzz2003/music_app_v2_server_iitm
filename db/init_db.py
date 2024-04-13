@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS "songData" (
     "songAlbumId" INTEGER NULL,
     "likesCount" INTEGER NOT NULL DEFAULT 0,
     "dislikesCount" INTEGER NOT NULL DEFAULT 0,
+    "songPlaysCount" INTEGER NOT NULL DEFAULT 0,
     "isActive" CHAR(1) NOT NULL,
     "createdBy" INTEGER NOT NULL,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -131,14 +132,6 @@ CREATE TABLE IF NOT EXISTS "songData" (
     FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
     FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
     CHECK ("isActive" IN ('0', '1'))
-);
-CREATE TABLE IF NOT EXISTS "songArtistData" (
-    "songId" INTEGER NOT NULL,
-    "artistId" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("songId") REFERENCES "songData"("songId"),
-    FOREIGN KEY ("artistId") REFERENCES "artistData"("artistId"),
-    PRIMARY KEY ("songId", "artistId")
 );
 CREATE TABLE IF NOT EXISTS "songLikeDislikeData" (
     "userId" INTEGER NOT NULL,
@@ -173,16 +166,6 @@ CREATE TABLE IF NOT EXISTS "albumData" (
     FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
     FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
     CHECK ("isActive" IN ('0', '1'))
-);
-CREATE TABLE IF NOT EXISTS "albumSongData" (
-    "albumId" INTEGER NOT NULL,
-    "songId" INTEGER NOT NULL,
-    "createdBy" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("albumId") REFERENCES "albumData"("albumId"),
-    FOREIGN KEY ("songId") REFERENCES "songData"("songId"),
-    FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
-    PRIMARY KEY ("albumId", "songId")
 );
 CREATE TABLE IF NOT EXISTS "albumLikeDislikeData" (
     "userId" INTEGER NOT NULL,

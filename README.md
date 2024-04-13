@@ -28,12 +28,12 @@
         - [x] Get Genre by ID
         - [x] Update Genre by ID
         - [x] Toggle Genre Status by ID
-    - [ ] Song
+    - [x] Song
         - [x] Create New Song
         - [x] Query All Songs
         - [x] Get Song by ID
         - [x] Update Song by ID
-        - [ ] Delete Song by ID
+        - [x] Delete Song by ID
         - [x] Toggle Song Status by ID
     - [ ] Playlist
         - [ ] Create New Playlist
@@ -49,7 +49,7 @@
         - [ ] Query All Albums
         - [x] Get Album by ID
         - [x] Update Album by ID
-        - [ ] Delete Album by ID
+        - [x] Delete Album by ID
         - [x] Add Song to Album
         - [x] Remove Song from Album
         - [x] Toggle Album Status by ID
@@ -107,7 +107,7 @@
         - [x] My Songs (All Songs of User)
         - [x] Get Song by ID
         - [x] Update Song by ID
-        - [ ] Delete Song by ID
+        - [x] Delete Song by ID
         - [x] Toggle Song Status by ID
     - [ ] Playlist
         - [ ] Create New Playlist
@@ -125,7 +125,7 @@
         - [ ] Query My Albums (All Albums of User)
         - [x] Get Album by ID
         - [x] Update Album by ID
-        - [ ] Delete Album by ID
+        - [x] Delete Album by ID
         - [x] Add Song to Album
         - [x] Remove Song from Album
         - [x] Toggle Album Status by ID
