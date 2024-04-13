@@ -57,7 +57,7 @@ def getProfile():
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(
-            "SELECT * FROM userData WHERE userId = ?",
+            "SELECT userFullName, userEmail, userId, userRoleId, userDob, userAccountStatus, createdAt FROM userData WHERE userId = ?",
             (userId,),
         )
         user_data = db_cursor.fetchone()
@@ -70,9 +70,24 @@ def getProfile():
 
         if user_data["userAccountStatus"] != "1":
             return make_response(jsonify({"message": "Your account is blocked."}), 401)
+        
+        # Get user Watch History
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT s.songId, s.songPlaysCount, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData as u on u.userId = s.createdBy WHERE s.isActive='1' AND s.songId IN (SELECT songId FROM userHistory WHERE userId = ?)",
+            (userId,),
+        )
+
+        user_songs = db_cursor.fetchall()
+        db_connection.close()
+
+        user_songs = [dict(zip([key[0] for key in db_cursor.description], song)) for song in user_songs]
 
         return make_response(
-            jsonify({"message": "User found.", "data": user_data}), 200
+            jsonify({"message": "User found.", "data": user_data, "songs": user_songs}), 200
         )
 
     except Exception as e:
@@ -156,7 +171,7 @@ def iWannaBeACreator():
         db_connection.commit()
 
         db_cursor.execute(
-            "SELECT * FROM userData WHERE userId = ?",
+            "SELECT userFullName, userEmail, userId, userRoleId, userDob, userAccountStatus, createdAt FROM userData WHERE userId = ?",
             (userId,),
         )
         user_data = db_cursor.fetchone()

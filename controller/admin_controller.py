@@ -1,3 +1,4 @@
+import urllib.parse
 from flask import Blueprint, request, jsonify, make_response
 from datetime import datetime
 
@@ -1040,7 +1041,14 @@ def createNewSong():
     try:
         # Authorize
         # Get Request Headers
-        tokenData = request.headers.get("Authorization")
+        data = request.form.to_dict()
+
+        # print(data)
+
+        if "token" not in data:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        tokenData = data['token']
 
         if tokenData == None or len(tokenData.split(" ")) != 2:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
@@ -1094,6 +1102,8 @@ def createNewSong():
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
         
         data = request.form.to_dict()
+        
+
         # print(data)
 
         # Check if required fields are present
@@ -1757,7 +1767,7 @@ def getMySongs():
         db_connection = sqlite3.connect("db/app_data.db")
         db_cursor = db_connection.cursor()
         db_cursor.execute(
-            """SELECT s.songName, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId
+            """SELECT s.songName, s.songId, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId
                         FROM songData AS s
                         JOIN genreData AS g ON s.songGenreId = g.genreId 
                         JOIN languageData AS l ON s.songLanguageId = l.languageId
