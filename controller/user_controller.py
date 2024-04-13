@@ -1871,3 +1871,320 @@ def dislikeSong(song_id):
         fs.write(f"{datetime.now()} | dislikeSong | {e}\n")
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)
+
+@user.route("/song/search", methods=["GET"])
+def songSearch():
+    # Search by songName, songGenre, songArtist, songLanguage, songAlbum
+    try:
+        # Authorize
+        # Get Request Headers
+        tokenData = request.headers.get("Authorization")
+
+        if tokenData == None or len(tokenData.split(" ")) != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        secretToken = tokenData.split(" ")[1]
+
+        # Validate Token
+        if len(str(secretToken)) == 0 or secretToken is None:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if len(secretToken.split(",")) != 3:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        decryptedToken = validateToken(
+            secretToken.split(",")[0],
+            secretToken.split(",")[1],
+            secretToken.split(",")[2],
+        )
+
+        if decryptedToken == -2:
+            return make_response(jsonify({"message": "Session Expired"}), 401)
+        elif decryptedToken == -1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        # Validate Token
+        if not isValidLoginToken(decryptedToken):
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        userId = decryptedToken["userId"]
+
+        # check if user exists
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM userData WHERE userId = ?",
+            (userId,),
+        )
+        user_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if user_data == None:
+            return make_response(jsonify({"message": "User not found."}), 404)
+
+        user_data = dict(zip([key[0] for key in db_cursor.description], user_data))
+
+        if user_data["userAccountStatus"] != "1":
+            return make_response(jsonify({"message": "Your account is blocked."}), 401)
+        
+        # Get liked songs
+
+        song_like_dislike_dict = {}
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songLikeDislikeData WHERE userId = ?",
+            (userId,),
+        )
+
+        like_dislike_data = db_cursor.fetchall()
+        db_connection.close()
+
+        like_dislike_data = [dict(zip([key[0] for key in db_cursor.description], song)) for song in like_dislike_data]
+
+        for song in like_dislike_data:
+            song_like_dislike_dict[song["songId"]] = song["isLike"]
+
+        if not request.args.get("q") and not request.args.get("g") and not request.args.get("l"):
+            # Select random 20 songs
+            db_connection = sqlite3.connect("db/app_data.db")
+            db_cursor = db_connection.cursor()
+
+            db_cursor.execute(
+                "SELECT s.songId, s.songPlaysCount, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData as u on u.userId = s.createdBy WHERE s.isActive='1' ORDER BY RANDOM() LIMIT 20"
+            )
+
+            songData = db_cursor.fetchall()
+            db_connection.close()
+
+            songData = [dict(zip([key[0] for key in db_cursor.description], song)) for song in songData]
+
+            for song in songData:
+                if song["songId"] in song_like_dislike_dict:
+                    song["isLike"] = song_like_dislike_dict[song["songId"]]
+                else:
+                    song["isLike"] = "-1"
+
+            return make_response(jsonify({"data": songData, "message": "Success"}), 200)
+
+
+        search_query = request.args.get("q") if request.args.get("q") else ""
+        genre_id = '0'
+        language_id = '0'
+
+        if request.args.get("g"):
+            genre_id = request.args.get("g")
+
+        if request.args.get("l"):
+            language_id = request.args.get("l")
+
+        search_query = str(search_query).lower()
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        if (genre_id != '0' and language_id != '0'):
+            db_cursor.execute(
+                "SELECT s.songId, s.songPlaysCount, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData AS u ON u.userId = s.createdBy WHERE (lower(s.songName) LIKE ? OR lower(u.userFullName) LIKE ? OR lower(g.genreName) LIKE ? OR lower(l.languageName) LIKE ?) AND s.isActive='1' AND s.songGenreId = ? AND s.songLanguageId = ?", (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", genre_id, language_id)
+            )
+        elif (genre_id != '0'):
+            db_cursor.execute(
+                "SELECT s.songId, s.songPlaysCount, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData AS u ON u.userId = s.createdBy WHERE (lower(s.songName) LIKE ? OR lower(u.userFullName) LIKE ? OR lower(g.genreName) LIKE ? OR lower(l.languageName) LIKE ?) AND s.isActive='1' AND s.songGenreId = ?", (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", genre_id)
+            )
+        elif (language_id != '0'):
+            db_cursor.execute(
+                "SELECT s.songId, s.songPlaysCount, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData AS u ON u.userId = s.createdBy WHERE (lower(s.songName) LIKE ? OR lower(u.userFullName) LIKE ? OR lower(g.genreName) LIKE ? OR lower(l.languageName) LIKE ?) AND s.isActive='1' AND s.songLanguageId = ?", (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", language_id)
+            )
+        else:
+            db_cursor.execute(
+                "SELECT s.songId, s.songPlaysCount, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData AS u ON u.userId = s.createdBy WHERE (lower(s.songName) LIKE ? OR lower(u.userFullName) LIKE ? OR lower(g.genreName) LIKE ? OR lower(l.languageName) LIKE ?) AND s.isActive='1'", (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%",)
+            )
+
+        songData = db_cursor.fetchall()
+        db_connection.close()
+
+        songData = [dict(zip([key[0] for key in db_cursor.description], song)) for song in songData]
+
+        for song in songData:
+            if song["songId"] in song_like_dislike_dict:
+                song["isLike"] = song_like_dislike_dict[song["songId"]]
+            else:
+                song["isLike"] = "-1"
+
+        return make_response(jsonify({"data": songData, "message": "Success"}), 200)
+    
+    except Exception as e:
+        fs = open("logs/public.log", "a")
+        fs.write(f"{datetime.now()} | songSearch | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)
+    
+
+@user.route("/song/<int:song_id>/play", methods=["POST"])
+def playSong(song_id):
+    try:
+        # Authorize
+        # Get Request Headers
+        tokenData = request.headers.get("Authorization")
+
+        if tokenData == None or len(tokenData.split(" ")) != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        secretToken = tokenData.split(" ")[1]
+
+        # Validate Token
+        if len(str(secretToken)) == 0 or secretToken is None:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if len(secretToken.split(",")) != 3:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        decryptedToken = validateToken(
+            secretToken.split(",")[0],
+            secretToken.split(",")[1],
+            secretToken.split(",")[2],
+        )
+
+        if decryptedToken == -2:
+            return make_response(jsonify({"message": "Session Expired"}), 401)
+        elif decryptedToken == -1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        # Validate Token
+        if not isValidLoginToken(decryptedToken):
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        userId = decryptedToken["userId"]
+
+        # check if user exists
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM userData WHERE userId = ?",
+            (userId,),
+        )
+        user_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if user_data == None:
+            return make_response(jsonify({"message": "User not found."}), 404)
+
+        user_data = dict(zip([key[0] for key in db_cursor.description], user_data))
+
+        if user_data["userAccountStatus"] != "1":
+            return make_response(jsonify({"message": "Your account is blocked."}), 401)
+
+        # Check if song exists
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songData WHERE songId = ?",
+            (song_id,),
+        )
+
+        song_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if song_data == None:
+            return make_response(jsonify({"message": "Song not found."}), 404)
+        
+        song_data = dict(zip([key[0] for key in db_cursor.description], song_data))
+
+        # insert into user history
+
+        # userHistory
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+        
+        db_cursor.execute(
+            "SELECT * FROM userHistory WHERE userId = ? AND songId = ?",
+            (userId, song_id),
+        )
+
+        user_history_data = db_cursor.fetchone()
+
+        if user_history_data == None:
+            db_cursor.execute(
+                "INSERT INTO userHistory (userId, songId) VALUES (?, ?)",
+                (userId, song_id),
+            )
+        else:
+            db_cursor.execute(
+                "UPDATE userHistory SET noOfPlays = noOfPlays + 1 WHERE userId = ? AND songId = ?",
+                (userId, song_id),
+            )
+
+        db_connection.commit()
+        db_connection.close()
+
+        # Update the song plays count
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "UPDATE songData SET songPlaysCount = songPlaysCount + 1 WHERE songId = ?",
+            (song_id,),
+        )
+
+        db_connection.commit()
+        db_connection.close()
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        if (song_data["songAlbumId"] != None):
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, a.albumName, a.albumId, a.albumDescription, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN albumData AS a ON a.albumId = s.songAlbumId JOIN userData as u on u.userId = s.createdBy WHERE s.songId = ? AND s.isActive='1'", (song_id,)
+            )
+        else:
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData as u on u.userId = s.createdBy WHERE s.songId = ? AND s.isActive='1'", (song_id,)
+            )
+
+        songData = db_cursor.fetchone()
+        db_connection.close()
+
+        songData = dict(zip([key[0] for key in db_cursor.description], songData))
+
+        # Check if the song is liked by the user
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT isLike FROM songLikeDislikeData WHERE userId = ? AND songId = ?",
+            (userId, song_id),
+        )
+
+        like_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if like_data != None:
+            songData["isLike"] = like_data[0]
+        else:
+            songData["isLike"] = "-1"
+
+
+        return make_response(jsonify({"data": songData, "message": "Success"}), 200)
+
+
+    except Exception as e:
+        fs = open("logs/user.log", "a")
+        fs.write(f"{datetime.now()} | playSong | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)
+
