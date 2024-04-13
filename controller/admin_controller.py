@@ -1357,24 +1357,41 @@ def updateSong(song_id):
 
         if not validateSongDuration(data["songDuration"]):
             return make_response(jsonify({"message": "Invalid data."}), 400)
-
-        if "songAudio" not in request.files or "songImage" not in request.files:
-            return make_response(jsonify({"message": "Missing files."}), 400)
-
-        songAudio = request.files["songAudio"]
-        songImage = request.files["songImage"]
-
-        if songAudio.filename == "" or songImage.filename == "":
-            return make_response(jsonify({"message": "Missing files."}), 400)
         
-        if songAudio.filename.split(".")[-1] != data["songAudioFileExt"] or songImage.filename.split(".")[-1] != data["songImageFileExt"]:
-            return make_response(jsonify({"message": "Invalid file extension."}), 400)
+        if "updateSongAudio" not in data or "updateSongImage" not in data:
+            return make_response(jsonify({"message": "Invalid Data."}), 400)
         
-        # Accept only png images. only mp3 audio files.
-        # TODO: Accept more
+        if data['updateSongAudio'] not in ["0", "1"] or data['updateSongImage'] not in ["0", "1"]:
+            return make_response(jsonify({"message": "Invalid Data."}), 400)
+        
 
-        if songAudio.filename.split(".")[-1] != "mp3" or songImage.filename.split(".")[-1] != "png":
-            return make_response(jsonify({"message": "Only mp3, png files supported"}), 400)
+        if data['updateSongAudio'] == '1':
+            if "songAudio" not in request.files:
+                return make_response(jsonify({"message": "Missing files."}), 400)
+            
+            songAudio = request.files["songAudio"]
+            if songAudio.filename == "":
+                return make_response(jsonify({"message": "Missing files."}), 400)
+            
+            if songAudio.filename.split(".")[-1] != data["songAudioFileExt"]:
+                return make_response(jsonify({"message": "Invalid file extension."}), 400)
+            
+            if songAudio.filename.split(".")[-1] != "mp3":
+                return make_response(jsonify({"message": "Only mp3 files supported"}), 400)
+            
+        if data['updateSongImage'] == '1':
+            if "songImage" not in request.files:
+                return make_response(jsonify({"message": "Missing files."}), 400)
+            
+            songImage = request.files["songImage"]
+            if songImage.filename == "":
+                return make_response(jsonify({"message": "Missing files."}), 400)
+            
+            if songImage.filename.split(".")[-1] != data["songImageFileExt"]:
+                return make_response(jsonify({"message": "Invalid file extension."}), 400)
+            
+            if songImage.filename.split(".")[-1] != "png":
+                return make_response(jsonify({"message": "Only png files supported"}), 400)
         
         songName = str(data["songName"]).strip()
         if "songDescription" in data:
@@ -1468,8 +1485,11 @@ def updateSong(song_id):
 
         # Save files
 
-        songAudio.save(f"static/song/audio/{song_id}.{songAudioFileExt}")
-        songImage.save(f"static/song/poster/{song_id}.{songImageFileExt}")
+        if data['updateSongAudio'] == '1':
+            songAudio.save(f"static/song/audio/{song_id}.{songAudioFileExt}")
+        
+        if data['updateSongImage'] == '1':
+            songImage.save(f"static/song/poster/{song_id}.{songImageFileExt}")
 
         return make_response(jsonify({"message": "Song updated successfully."}), 200)
 
@@ -2583,7 +2603,7 @@ def getAlbumById(album_id):
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(
-            "SELECT s.songId, s.songName, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId FROM songData AS s JOIN genreData AS g ON s.songGenreId = g.genreId JOIN languageData AS l ON s.songLanguageId = l.languageId JOIN userData AS u ON s.createdBy = u.userId WHERE s.songAlbumId = ?",
+            "SELECT s.songId, s.songName, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId FROM songData AS s JOIN genreData AS g ON s.songGenreId = g.genreId JOIN languageData AS l ON s.songLanguageId = l.languageId JOIN userData AS u ON s.createdBy = u.userId WHERE s.songAlbumId = ?",
             (album_id,),
         )
 
@@ -2846,6 +2866,7 @@ def removeSongFromAlbum(album_id, song_id):
 
 @admin.route("/album/<int:album_id>/delete", methods=["POST"])
 def deleteAlbum(album_id):
+
     try:
         # Authorize
         # Get Request Headers
@@ -2959,3 +2980,4 @@ def deleteAlbum(album_id):
         fs.write(f"{datetime.now()} | deleteAlbum | {e}\n")
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)
+    
