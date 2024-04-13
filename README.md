@@ -35,6 +35,7 @@
         - [x] Update Song by ID
         - [x] Delete Song by ID
         - [x] Toggle Song Status by ID
+        - [x] Like/Dislike Song by ID
     - [x] Playlist
         - [x] Create New Playlist
         - [x] Query All Playlists (All Public Playlists)
@@ -97,8 +98,7 @@
     - [ ] Song
         - [x] Query All Songs
         - [x] Get Song by ID
-        - [ ] Report Song by ID
-        - [ ] Like/Dislike Song by ID
+        - [x] Like/Dislike Song by ID
 - [x] Creator
     - [x] Get Profile
     - [x] Language
@@ -121,6 +121,7 @@
         - [x] Update Song by ID
         - [x] Delete Song by ID
         - [x] Toggle Song Status by ID
+        - [x] Like/Dislike Song by ID
     - [x] Playlist
         - [x] Create New Playlist
         - [x] Query All Playlists (All Visible Playlists)
