@@ -1557,3 +1557,317 @@ def togglePlayListAccess(playlist_id):
         fs.write(f"{datetime.now()} | togglePlayListAccess | {e}\n")
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)
+
+# Song API
+
+@user.route("/song/<int:song_id>/like", methods=["POST"])
+def likeSong(song_id):
+    try:
+        # Authorize
+        # Get Request Headers
+        tokenData = request.headers.get("Authorization")
+
+        if tokenData == None or len(tokenData.split(" ")) != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        secretToken = tokenData.split(" ")[1]
+
+        # Validate Token
+        if len(str(secretToken)) == 0 or secretToken is None:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if len(secretToken.split(",")) != 3:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        decryptedToken = validateToken(
+            secretToken.split(",")[0],
+            secretToken.split(",")[1],
+            secretToken.split(",")[2],
+        )
+
+        if decryptedToken == -2:
+            return make_response(jsonify({"message": "Session Expired"}), 401)
+        elif decryptedToken == -1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        # Validate Token
+        if not isValidLoginToken(decryptedToken):
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        userId = decryptedToken["userId"]
+
+        # check if user exists
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM userData WHERE userId = ?",
+            (userId,),
+        )
+        user_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if user_data == None:
+            return make_response(jsonify({"message": "User not found."}), 404)
+
+        user_data = dict(zip([key[0] for key in db_cursor.description], user_data))
+
+        if user_data["userAccountStatus"] != "1":
+            return make_response(jsonify({"message": "Your account is blocked."}), 401)
+        
+
+        # Check if song exists
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songData WHERE songId = ?",
+            (song_id,),
+        )
+
+        song_data = db_cursor.fetchone()
+
+        db_connection.close()
+
+        if song_data == None:
+            return make_response(jsonify({"message": "Song not found."}), 404)
+        
+        song_data = dict(zip([key[0] for key in db_cursor.description], song_data))
+
+        # check if user has already liked the song
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songLikeDislikeData WHERE userId = ? AND songId = ? AND isLike = '1'",
+            (userId, song_id),
+        )
+
+        like_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if like_data != None:
+            return make_response(jsonify({"message": "You have already liked the song."}), 400)
+        
+        # check if user has already disliked the song
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songLikeDislikeData WHERE userId = ? AND songId = ? AND isLike = '0'",
+            (userId, song_id),
+        )
+
+        dislike_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if dislike_data != None:
+            # Update the dislike to like
+
+            db_connection = sqlite3.connect("db/app_data.db")
+            db_cursor = db_connection.cursor()
+
+            db_cursor.execute(
+                "UPDATE songLikeDislikeData SET isLike = '1' WHERE userId = ? AND songId = ?",
+                (userId, song_id),
+            )
+
+            db_cursor.execute(
+                "UPDATE songData SET likesCount = likesCount + 1, dislikesCount = dislikesCount - 1 WHERE songId = ?",
+                (song_id,),
+            )
+
+            db_connection.commit()
+
+            db_connection.close()
+
+            return make_response(jsonify({"message": "Song liked."}), 200)
+        
+        # Like the song
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "INSERT INTO songLikeDislikeData (userId, songId, isLike) VALUES (?, ?, '1')",
+            (userId, song_id),
+        )
+
+        db_cursor.execute(
+            "UPDATE songData SET likesCount = likesCount + 1 WHERE songId = ?",
+            (song_id,),
+        )
+
+        db_connection.commit()
+        db_connection.close()
+
+        return make_response(jsonify({"message": "Song liked."}), 200)
+
+    except Exception as e:
+        fs = open("logs/user.log", "a")
+        fs.write(f"{datetime.now()} | likeSong | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)
+    
+@user.route("/song/<int:song_id>/dislike", methods=["POST"])
+def dislikeSong(song_id):
+    try:
+        # Authorize
+        # Get Request Headers
+        tokenData = request.headers.get("Authorization")
+
+        if tokenData == None or len(tokenData.split(" ")) != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        secretToken = tokenData.split(" ")[1]
+
+        # Validate Token
+        if len(str(secretToken)) == 0 or secretToken is None:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if len(secretToken.split(",")) != 3:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        decryptedToken = validateToken(
+            secretToken.split(",")[0],
+            secretToken.split(",")[1],
+            secretToken.split(",")[2],
+        )
+
+        if decryptedToken == -2:
+            return make_response(jsonify({"message": "Session Expired"}), 401)
+        elif decryptedToken == -1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        # Validate Token
+        if not isValidLoginToken(decryptedToken):
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        userId = decryptedToken["userId"]
+
+        # check if user exists
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM userData WHERE userId = ?",
+            (userId,),
+        )
+        user_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if user_data == None:
+            return make_response(jsonify({"message": "User not found."}), 404)
+
+        user_data = dict(zip([key[0] for key in db_cursor.description], user_data))
+
+        if user_data["userAccountStatus"] != "1":
+            return make_response(jsonify({"message": "Your account is blocked."}), 401)
+        
+
+        # Check if song exists
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songData WHERE songId = ?",
+            (song_id,),
+        )
+
+        song_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if song_data == None:
+            return make_response(jsonify({"message": "Song not found."}), 404)
+        
+        song_data = dict(zip([key[0] for key in db_cursor.description], song_data))
+
+        # check if user has already disliked the song
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songLikeDislikeData WHERE userId = ? AND songId = ? AND isLike = '0'",
+            (userId, song_id),
+        )
+
+        dislike_data = db_cursor.fetchone()
+
+        db_connection.close()
+
+        if dislike_data != None:
+            return make_response(jsonify({"message": "You have already disliked the song."}), 400)
+        
+        # check if user has already liked the song
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM songLikeDislikeData WHERE userId = ? AND songId = ? AND isLike = '1'",
+            (userId, song_id),
+        )
+
+        like_data = db_cursor.fetchone()
+
+        db_connection.close()
+
+        if like_data != None:
+            # Update the like to dislike
+
+            db_connection = sqlite3.connect("db/app_data.db")
+            db_cursor = db_connection.cursor()
+
+            db_cursor.execute(
+                "UPDATE songLikeDislikeData SET isLike = '0' WHERE userId = ? AND songId = ?",
+                (userId, song_id),
+            )
+
+            db_cursor.execute(
+                "UPDATE songData SET likesCount = likesCount - 1, dislikesCount = dislikesCount + 1 WHERE songId = ?",
+                (song_id,),
+            )
+
+            db_connection.commit()
+
+            db_connection.close()
+
+            return make_response(jsonify({"message": "Song disliked."}), 200)
+        
+        # Dislike the song
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "INSERT INTO songLikeDislikeData (userId, songId, isLike) VALUES (?, ?, '0')",
+            (userId, song_id),
+        )
+
+        db_cursor.execute(
+            "UPDATE songData SET dislikesCount = dislikesCount + 1 WHERE songId = ?",
+            (song_id,),
+        )
+
+        db_connection.commit()
+
+        db_connection.close()
+
+        return make_response(jsonify({"message": "Song disliked."}), 200)
+
+    except Exception as e:
+        fs = open("logs/user.log", "a")
+        fs.write(f"{datetime.now()} | dislikeSong | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)
