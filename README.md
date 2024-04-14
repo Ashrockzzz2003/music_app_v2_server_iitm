@@ -5,8 +5,47 @@
 | Purpose | Technology |
 | --- | --- |
 | Frontend | VueJS, HTML, CSS |
-| Backend | Python, flask |
+| Backend | Python, flask, redis, celery |
 | Database | SQLite3 |
+
+## How to run the app
+
+> Pre-requisite: python, Node.js, redis
+
+```bash
+# Start Redis server
+
+redis-server
+```
+
+## Backend
+
+```bash
+# From the root directory of the project
+cd server
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+
+# Open a new terminal window at the root directory of the project
+cd server
+celery -A app.celery worker -l info # Worker for Celery
+
+# Open a new terminal window at the root directory of the project
+cd server
+celery -A app.celery beat --max-interval 1 -l info # Beat for Celery
+
+```
+
+## Frontend
+
+```bash
+# From the root directory of the project
+cd music_app_v2
+npm i
+npm run dev
+```
 
 ## API Endpoints
 
