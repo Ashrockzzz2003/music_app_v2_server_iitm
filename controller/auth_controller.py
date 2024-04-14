@@ -88,6 +88,7 @@ def login():
                     "message": "Login successful.",
                     "token": token,
                     "userRoleId": user_data[7],
+                    "userId": user_data[0],
                 }
             ),
             200,

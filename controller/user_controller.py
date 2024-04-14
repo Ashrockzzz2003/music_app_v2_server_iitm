@@ -205,7 +205,10 @@ def iWannaBeACreator():
 @user.route("/playlist/create", methods=["POST"])
 def createNewPlaylist():
     try:
-        data = request.form.to_dict()
+        if not request.is_json:
+            return make_response(jsonify({"message": "Missing JSON in request."}), 400)
+
+        data = request.get_json()
 
         # Authorize
         # Get Request Headers
@@ -390,7 +393,10 @@ def createNewPlaylist():
 @user.route("/playlist/<int:playlist_id>/update", methods=["POST"])
 def updatePlayList(playlist_id):
     try:
-        data = request.form.to_dict()
+        if not request.is_json:
+            return make_response(jsonify({"message": "Missing JSON in request."}), 400)
+        
+        data = request.get_json()
 
         # Authorize
         # Get Request Headers
@@ -626,9 +632,6 @@ def addSong(playlist_id, song_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
-            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
-
         # Validate Token
         if not isValidLoginToken(decryptedToken):
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
@@ -672,7 +675,7 @@ def addSong(playlist_id, song_id):
         
         playlist_data = dict(zip([key[0] for key in db_cursor.description], playlist_data))
 
-        if playlist_data["createdBy"] != userId and user_data["userRoleId"] != 1:
+        if playlist_data["createdBy"] != userId and user_data["userRoleId"] != 1 :
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
         
         # Check if song exists
@@ -681,7 +684,7 @@ def addSong(playlist_id, song_id):
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(
-            "SELECT * FROM songData WHERE songId = ?",
+            "SELECT * FROM songData WHERE songId = ? AND isActive = '1'",
             (song_id,),
         )
 
@@ -815,7 +818,7 @@ def removeSongFromPlaylist(playlist_id, song_id):
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(
-            "SELECT * FROM songData WHERE songId = ?",
+            "SELECT * FROM songData WHERE songId = ? AND isActive = '1'",
             (song_id,),
         )
 
@@ -926,7 +929,7 @@ def getPlaylists():
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(
-            "SELECT * FROM playlistData WHERE createdBy = ? OR isPublic = '1'",
+            "SELECT * FROM playlistData WHERE createdBy = ?",
             (userId,),
         )
 
@@ -935,7 +938,20 @@ def getPlaylists():
 
         playlist_data = [dict(zip([key[0] for key in db_cursor.description], playlist)) for playlist in playlist_data]
 
-        return make_response(jsonify({"message": "Playlists found.", "data": playlist_data}), 200)
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT playlistId, playlistName, playlistDescription, isPublic, userFullName from playlistData JOIN userData ON userData.userId = playlistData.createdBy WHERE createdBy != ? AND isPublic = '1'",
+            (userId,),
+        )
+
+        public_playlists = db_cursor.fetchall()
+        db_connection.close()
+
+        public_playlists = [dict(zip([key[0] for key in db_cursor.description], playlist)) for playlist in public_playlists]
+
+        return make_response(jsonify({"message": "Playlists found.", "data": playlist_data, "public": public_playlists}), 200)
         
 
     except Exception as e:
@@ -1572,6 +1588,104 @@ def togglePlayListAccess(playlist_id):
         fs.write(f"{datetime.now()} | togglePlayListAccess | {e}\n")
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)
+    
+@user.route("/playlist/<int:playlist_id>/not-in-playlist", methods=["GET"])
+def getSongsNotInPlaylist(playlist_id):
+    try:
+        # Authorize
+        # Get Request Headers
+        tokenData = request.headers.get("Authorization")
+
+        if tokenData == None or len(tokenData.split(" ")) != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        secretToken = tokenData.split(" ")[1]
+
+        # Validate Token
+        if len(str(secretToken)) == 0 or secretToken is None:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if len(secretToken.split(",")) != 3:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        decryptedToken = validateToken(
+            secretToken.split(",")[0],
+            secretToken.split(",")[1],
+            secretToken.split(",")[2],
+        )
+
+        if decryptedToken == -2:
+            return make_response(jsonify({"message": "Session Expired"}), 401)
+        elif decryptedToken == -1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        # Validate Token
+        if not isValidLoginToken(decryptedToken):
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        userId = decryptedToken["userId"]
+
+        # check if user exists
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM userData WHERE userId = ?",
+            (userId,),
+        )
+        user_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if user_data == None:
+            return make_response(jsonify({"message": "User not found."}), 404)
+
+        user_data = dict(zip([key[0] for key in db_cursor.description], user_data))
+
+        if user_data["userAccountStatus"] != "1":
+            return make_response(jsonify({"message": "Your account is blocked."}), 401)
+        
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT * FROM playlistData WHERE playlistId = ?",
+            (playlist_id,),
+        )
+
+        playlist_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if playlist_data == None:
+            return make_response(jsonify({"message": "Playlist not found."}), 404)
+        
+        playlist_data = dict(zip([key[0] for key in db_cursor.description], playlist_data))
+
+        if playlist_data["createdBy"] != userId and playlist_data["isPublic"] != "1" and user_data["userRoleId"] != 1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT s.songId, s.songPlaysCount, s.songName, s.songDescription, s.songDuration, l.languageId, s.songReleaseDate, s.songLyrics, s.likesCount, s.dislikesCount, s.songAudioFileExt, s.songImageFileExt, s.songLanguageId, l.languageName, l.languageCode, s.songGenreId, g.genreName, g.genreDescription, s.songAlbumId, u.userFullName, u.userId from songData AS s JOIN languageData AS l ON l.languageId = s.songLanguageId JOIN genreData AS g ON g.genreId = s.songGenreId JOIN userData as u on u.userId = s.createdBy WHERE s.isActive='1' AND s.songId NOT IN (SELECT songId FROM playlistSongData WHERE playlistId = ?)",
+            (playlist_id,),
+        )
+
+        playlist_songs = db_cursor.fetchall()
+        db_connection.close()
+
+        playlist_songs = [dict(zip([key[0] for key in db_cursor.description], song)) for song in playlist_songs]
+
+        return make_response(jsonify({"message": "Playlist found.", "data": playlist_data, "songs": playlist_songs}), 200)
+
+    except Exception as e:
+        fs = open("logs/user.log", "a")
+        fs.write(f"{datetime.now()} | getPlaylistById | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)
 
 # Song API
 
@@ -1640,7 +1754,7 @@ def likeSong(song_id):
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(
-            "SELECT * FROM songData WHERE songId = ?",
+            "SELECT * FROM songData WHERE songId = ? AND isActive = '1'",
             (song_id,),
         )
 
@@ -1795,7 +1909,7 @@ def dislikeSong(song_id):
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(
-            "SELECT * FROM songData WHERE songId = ?",
+            "SELECT * FROM songData WHERE songId = ? AND isActive = '1'",
             (song_id,),
         )
 
@@ -2105,7 +2219,7 @@ def playSong(song_id):
         db_cursor = db_connection.cursor()
 
         db_cursor.execute(
-            "SELECT * FROM songData WHERE songId = ?",
+            "SELECT * FROM songData WHERE songId = ? AND isActive = '1'",
             (song_id,),
         )
 
