@@ -2,6 +2,4 @@ flask
 pycryptodome
 celery
 redis
-smtplib
-ssl
 flask_cors

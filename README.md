@@ -30,10 +30,12 @@ python app.py
 
 # Open a new terminal window at the root directory of the project
 cd server
+source venv/bin/activate
 celery -A app.celery worker -l info # Worker for Celery
 
 # Open a new terminal window at the root directory of the project
 cd server
+source venv/bin/activate
 celery -A app.celery beat --max-interval 1 -l info # Beat for Celery
 
 ```
