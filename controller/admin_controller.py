@@ -1942,7 +1942,13 @@ def createNewAlbum():
     try:
         # Authorize
         # Get Request Headers
-        tokenData = request.headers.get("Authorization")
+
+        data = request.form.to_dict()
+
+        if "token" not in data:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        tokenData = data['token']
 
         if tokenData == None or len(tokenData.split(" ")) != 2:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
@@ -2597,7 +2603,22 @@ def getAlbumById(album_id):
             
             album_data = dict(zip([key[0] for key in db_cursor.description], album_data))
 
-            return make_response(jsonify({"message": "Success", "data": album_data}), 200)
+            # Get Album Songs
+
+            db_connection = sqlite3.connect("db/app_data.db")
+            db_cursor = db_connection.cursor()
+
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId FROM songData AS s JOIN genreData AS g ON s.songGenreId = g.genreId JOIN languageData AS l ON s.songLanguageId = l.languageId JOIN userData AS u ON s.createdBy = u.userId WHERE s.songAlbumId = ?",
+                (album_id,),
+            )
+
+            album_songs = db_cursor.fetchall()
+            db_connection.close()
+
+            album_songs = [dict(zip([key[0] for key in db_cursor.description], song)) for song in album_songs]
+
+            return make_response(jsonify({"message": "Success", "data": album_data, "songs": album_songs}), 200)
 
         db_connection = sqlite3.connect("db/app_data.db")
         db_cursor = db_connection.cursor()
@@ -3074,7 +3095,21 @@ def getSongsNotInAlbum(album_id):
             
             album_data = dict(zip([key[0] for key in db_cursor.description], album_data))
 
-            return make_response(jsonify({"message": "Success", "data": album_data}), 200)
+            # Get not in Album Songs
+
+            db_connection = sqlite3.connect("db/app_data.db")
+            db_cursor = db_connection.cursor()
+
+            db_cursor.execute(
+                "SELECT s.songId, s.songName, s.songPlaysCount, s.songDescription, s.songDuration, s.songReleaseDate, s.songLyrics, s.songAudioFileExt, s.songImageFileExt, g.genreId, g.genreName, l.languageName, l.languageId, s.createdBy, u.userFullName, s.isActive, s.createdAt, s.lastUpdatedAt, s.likesCount, s.dislikesCount, s.songAlbumId FROM songData AS s JOIN genreData AS g ON s.songGenreId = g.genreId JOIN languageData AS l ON s.songLanguageId = l.languageId JOIN userData AS u ON s.createdBy = u.userId WHERE s.songAlbumId IS NULL",
+            )
+
+            album_songs = db_cursor.fetchall()
+            db_connection.close()
+
+            album_songs = [dict(zip([key[0] for key in db_cursor.description], song)) for song in album_songs]
+
+            return make_response(jsonify({"message": "Success", "data": album_data, "songs": album_songs}), 200)
 
         db_connection = sqlite3.connect("db/app_data.db")
         db_cursor = db_connection.cursor()

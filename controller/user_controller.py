@@ -234,7 +234,7 @@ def createNewPlaylist():
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -419,7 +419,7 @@ def updatePlayList(playlist_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -626,7 +626,7 @@ def addSong(playlist_id, song_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -759,7 +759,7 @@ def removeSongFromPlaylist(playlist_id, song_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -893,7 +893,7 @@ def getPlaylists():
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -974,7 +974,7 @@ def getPlaylistById(playlist_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -1072,7 +1072,7 @@ def likePlaylist(playlist_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -1226,7 +1226,7 @@ def dislikePlaylist(playlist_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -1380,7 +1380,7 @@ def deletePlaylist(playlist_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -1496,7 +1496,7 @@ def togglePlayListAccess(playlist_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -1605,7 +1605,7 @@ def likeSong(song_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -1760,7 +1760,7 @@ def dislikeSong(song_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -1918,7 +1918,7 @@ def songSearch():
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
@@ -2071,7 +2071,7 @@ def playSong(song_id):
         elif decryptedToken == -1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
-        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2:
+        if decryptedToken["userRoleId"] != 3 and decryptedToken["userRoleId"] != 2 and decryptedToken["userRoleId"] != 1:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
 
         # Validate Token
