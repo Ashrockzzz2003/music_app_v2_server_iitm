@@ -34,7 +34,7 @@ def testCelery():
 
 @celery.task
 def sendDailyReminderMail():
-    db_connection = sqlite3.connect("../db/app_data.db")
+    db_connection = sqlite3.connect("db/app_data.db")
     db_cursor = db_connection.cursor()
 
     today_date = str(datetime.now().date())
