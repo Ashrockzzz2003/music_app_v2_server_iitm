@@ -3337,3 +3337,142 @@ def getSongsNotInAlbum(album_id):
         fs.write(f"{datetime.now()} | getSongsNotInAlbum | {e}\n")
         fs.close()
         return make_response(jsonify({"message": "Internal server error."}), 500)
+
+@admin.route("/get-stats", methods=["GET"])
+def getStats():
+    try:
+        # Authorize
+        # Get Request Headers
+        tokenData = request.headers.get("Authorization")
+
+        if tokenData == None or len(tokenData.split(" ")) != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        secretToken = tokenData.split(" ")[1]
+
+        # Validate Token
+        if len(str(secretToken)) == 0 or secretToken is None:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if len(secretToken.split(",")) != 3:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        decryptedToken = validateToken(
+            secretToken.split(",")[0],
+            secretToken.split(",")[1],
+            secretToken.split(",")[2],
+        )
+
+        if decryptedToken == -2:
+            return make_response(jsonify({"message": "Session Expired"}), 401)
+        elif decryptedToken == -1:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        if decryptedToken["userRoleId"] != 1 and decryptedToken["userRoleId"] != 2:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        # Validate Token
+        if not isValidLoginToken(decryptedToken):
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        userId = decryptedToken["userId"]
+
+        # check if user exists
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute(
+            "SELECT userId, userAccountStatus, userRoleId FROM userData WHERE userId = ?",
+            (userId,),
+        )
+        user_data = db_cursor.fetchone()
+        db_connection.close()
+
+        if user_data == None:
+            return make_response(jsonify({"message": "User not found."}), 404)
+
+        # Check if user is admin
+
+        if user_data[2] != 1  and user_data[1] != "1":
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+        
+        # Get Stats
+        # No of artists
+        # No of songs
+        # No of albums
+        # No of genres
+        # No of languages
+        # No of users
+        # No of creators
+        # No of playlists
+
+        the_stats = {}
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        res = db_cursor.execute("SELECT userRoleId, COUNT(*) FROM userData GROUP BY userRoleId").fetchall()
+
+        the_stats["noOfUsers"] = 0
+        the_stats["noOfCreators"] = 0
+        
+        for r in res:
+            if r[0] == 2:
+                the_stats["noOfCreators"] = r[1]
+            else:
+                the_stats["noOfUsers"] += r[1]
+
+        the_stats["noOfSongs"] = db_cursor.execute("SELECT COUNT(*) FROM songData").fetchone()[0]
+        the_stats["noOfAlbums"] = db_cursor.execute("SELECT COUNT(*) FROM albumData").fetchone()[0]
+        the_stats["noOfGenres"] = db_cursor.execute("SELECT COUNT(*) FROM genreData").fetchone()[0]
+        the_stats["noOfLanguages"] = db_cursor.execute("SELECT COUNT(*) FROM languageData").fetchone()[0]
+        the_stats["noOfPlaylists"] = db_cursor.execute("SELECT COUNT(*) FROM playlistData").fetchone()[0]
+
+        db_connection.close()
+
+        # Songs with most likes, songName and likesCount
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        res = db_cursor.execute("SELECT s.songId, s.songName, s.songDescription, s.likesCount, u.userFullName FROM songData AS s JOIN userData AS u ON u.userId = s.createdBy ORDER BY s.likesCount DESC LIMIT 1").fetchone()
+
+        the_stats["mostLikedSong"] = {
+            "songId": res[0],
+            "songName": res[1],
+            "songDescription": res[2],
+            "likesCount": res[3],
+            "createdBy": res[4]
+        }
+
+        db_connection.close()
+
+        # Songs with most plays, songName and songPlaysCount
+
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        res = db_cursor.execute("SELECT s.songId, s.songName, s.songDescription, s.songPlaysCount, u.userFullName FROM songData AS s JOIN userData AS u ON u.userId = s.createdBy ORDER BY s.songPlaysCount DESC LIMIT 1").fetchone()
+
+        the_stats["mostPlayedSong"] = {
+            "songId": res[0],
+            "songName": res[1],
+            "songDescription": res[2],
+            "songPlaysCount": res[3],
+            "createdBy": res[4]
+        }
+
+        db_connection.close()
+
+
+
+        return make_response(jsonify({"message": "Success", "data": the_stats}), 200)
+
+
+        
+    except Exception as e:
+        fs = open("logs/admin.log", "a")
+        fs.write(f"{datetime.now()} | getStats | {e}\n")
+        fs.close()
+        return make_response(jsonify({"message": "Internal server error."}), 500)
+
