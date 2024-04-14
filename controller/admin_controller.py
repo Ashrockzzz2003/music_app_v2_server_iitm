@@ -2141,7 +2141,13 @@ def updateAlbumData(album_id):
     if 1 == 1:
         # Authorize
         # Get Request Headers
-        tokenData = request.headers.get("Authorization")
+
+        data = request.form.to_dict()
+
+        if "token" not in data:
+            return make_response(jsonify({"message": "Unauthorized Access"}), 401)
+
+        tokenData = data['token']
 
         if tokenData == None or len(tokenData.split(" ")) != 2:
             return make_response(jsonify({"message": "Unauthorized Access"}), 401)
