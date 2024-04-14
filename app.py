@@ -9,6 +9,10 @@ from middleware.keyGen import generateKey
 
 from flask_cors import CORS
 
+# CELERY related imports 
+from tasks import workers
+from tasks.tasks import *
+
 app = Flask(__name__)
 CORS(app)
 
@@ -22,9 +26,21 @@ app.register_blueprint(user, url_prefix="/api/user")
 app.register_blueprint(admin, url_prefix="/api/admin")
 app.register_blueprint(public, url_prefix="/api/public")
 
+celery = workers.celery
+
+celery.conf.update(
+    broker = 'redis://localhost:6379/1',
+    backend = 'redis://localhost:6379/2',
+    timezone = 'Asia/Calcutta',
+    enable_utc = False
+)
+
+celery.Task = workers.ContextTask
+app.app_context().push()
+
 if __name__ == "__main__":
     # Clear Data and Reinitialize Database
-    # reinitializeDatabase()
+    reinitializeDatabase()
     # Generate RSA Keys
-    # generateKey()
+    generateKey()
     app.run(debug=True, port=5000)

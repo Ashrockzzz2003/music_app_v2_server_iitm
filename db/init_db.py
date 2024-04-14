@@ -57,6 +57,12 @@ CREATE TABLE IF NOT EXISTS "userData" (
     CHECK ("userAccountStatus" IN ('0', '1', '2'))
 );
 
+CREATE TABLE IF NOT EXISTS "loginLogs"(
+    "userId" INTEGER NOT NULL,
+    "loginDate" TEXT NOT NULL,
+    FOREIGN KEY ("userId") REFERENCES "userData"("userId")
+);
+
 CREATE TABLE IF NOT EXISTS "forgotPasswordOtp"(
     "userId" INTEGER NOT NULL,
     "userOtp" VARCHAR(6) NOT NULL,
@@ -106,6 +112,23 @@ CREATE TABLE IF NOT EXISTS "languageData" (
     FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
     CHECK ("isActive" IN ('0', '1'))
 );
+CREATE TABLE IF NOT EXISTS "albumData" (
+    "albumId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "albumName" VARCHAR(255) NOT NULL,
+    "albumDescription" VARCHAR(255) NULL,
+    "albumReleaseDate" TEXT NOT NULL,
+    "albumImageFileExt" VARCHAR(10) NOT NULL,
+    "albumLikesCount" INTEGER NOT NULL,
+    "albumDislikesCount" INTEGER NOT NULL,
+    "isActive" CHAR(1) NOT NULL,
+    "createdBy" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "lastUpdatedBy" INTEGER NOT NULL,
+    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
+    FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
+    CHECK ("isActive" IN ('0', '1'))
+);
 CREATE TABLE IF NOT EXISTS "songData" (
     "songId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "songName" VARCHAR(255) NOT NULL,
@@ -145,27 +168,11 @@ CREATE TABLE IF NOT EXISTS "songLikeDislikeData" (
 CREATE TABLE IF NOT EXISTS "userHistory" (
     "userId" INTEGER NOT NULL,
     "songId" INTEGER NOT NULL,
+    "noOfPlays" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("userId") REFERENCES "userData"("userId"),
     FOREIGN KEY ("songId") REFERENCES "songData"("songId"),
     PRIMARY KEY ("userId", "songId")
-);
-CREATE TABLE IF NOT EXISTS "albumData" (
-    "albumId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "albumName" VARCHAR(255) NOT NULL,
-    "albumDescription" VARCHAR(255) NULL,
-    "albumReleaseDate" TEXT NOT NULL,
-    "albumImageFileExt" VARCHAR(10) NOT NULL,
-    "albumLikesCount" INTEGER NOT NULL,
-    "albumDislikesCount" INTEGER NOT NULL,
-    "isActive" CHAR(1) NOT NULL,
-    "createdBy" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    "lastUpdatedBy" INTEGER NOT NULL,
-    "lastUpdatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("createdBy") REFERENCES "userData"("userId"),
-    FOREIGN KEY ("lastUpdatedBy") REFERENCES "userData"("userId"),
-    CHECK ("isActive" IN ('0', '1'))
 );
 CREATE TABLE IF NOT EXISTS "albumLikeDislikeData" (
     "userId" INTEGER NOT NULL,

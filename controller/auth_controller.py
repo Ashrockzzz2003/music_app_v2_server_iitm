@@ -73,6 +73,25 @@ def login():
 
         if user_data[6] == "0":
             return make_response(jsonify({"message": "Your account is blocked."}), 400)
+        
+        # login log
+        db_connection = sqlite3.connect("db/app_data.db")
+        db_cursor = db_connection.cursor()
+
+        # delete old log
+        db_cursor.execute(
+            "DELETE FROM loginLogs WHERE userId = ?",
+            (user_data[0],),
+        )
+
+        # insert new log
+        db_cursor.execute(
+            "INSERT INTO loginLogs (userId, loginDate) VALUES (?, ?)",
+            (user_data[0], str(datetime.now().date())),
+        )
+
+        db_connection.commit()
+        db_connection.close()
 
         token = generateToken(
             {

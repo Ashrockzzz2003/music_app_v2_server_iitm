@@ -3437,6 +3437,9 @@ def getStats():
 
         res = db_cursor.execute("SELECT s.songId, s.songName, s.songDescription, s.likesCount, u.userFullName FROM songData AS s JOIN userData AS u ON u.userId = s.createdBy ORDER BY s.likesCount DESC LIMIT 1").fetchone()
 
+        if res == None:
+            res = (0, "No Songs", "No Songs", 0, "No Songs")
+
         the_stats["mostLikedSong"] = {
             "songId": res[0],
             "songName": res[1],
@@ -3453,6 +3456,9 @@ def getStats():
         db_cursor = db_connection.cursor()
 
         res = db_cursor.execute("SELECT s.songId, s.songName, s.songDescription, s.songPlaysCount, u.userFullName FROM songData AS s JOIN userData AS u ON u.userId = s.createdBy ORDER BY s.songPlaysCount DESC LIMIT 1").fetchone()
+
+        if res == None:
+            res = (0, "No Songs", "No Songs", 0, "No Songs")
 
         the_stats["mostPlayedSong"] = {
             "songId": res[0],

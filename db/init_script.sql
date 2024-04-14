@@ -53,6 +53,12 @@ CREATE TABLE IF NOT EXISTS "userData" (
     CHECK ("userAccountStatus" IN ('0', '1', '2'))
 );
 
+CREATE TABLE IF NOT EXISTS "loginLogs"(
+    "userId" INTEGER NOT NULL,
+    "loginDate" TEXT NOT NULL,
+    FOREIGN KEY ("userId") REFERENCES "userData"("userId")
+);
+
 CREATE TABLE IF NOT EXISTS "forgotPasswordOtp"(
     "userId" INTEGER NOT NULL,
     "userOtp" VARCHAR(6) NOT NULL,
