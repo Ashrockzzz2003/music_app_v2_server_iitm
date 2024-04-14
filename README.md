@@ -13,15 +13,15 @@
 > Pre-requisite: python, Node.js, redis
 
 ```bash
-# Start Redis server
-
+# Open a new terminal window at the root directory of the project
+# Start the redis server
 redis-server
 ```
 
 ## Backend
 
 ```bash
-# From the root directory of the project
+# Open a new terminal window at the root directory of the project
 cd server
 python -m venv venv
 source venv/bin/activate
@@ -43,7 +43,7 @@ celery -A app.celery beat --max-interval 1 -l info # Beat for Celery
 ## Frontend
 
 ```bash
-# From the root directory of the project
+# Open a new terminal window at the root directory of the project
 cd music_app_v2
 npm i
 npm run dev
