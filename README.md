@@ -10,6 +10,12 @@
 
 ## How to run the app
 
+> Pre-requisite: git installed in your system
+
+```bash
+git clone https://github.com/Ashrockzzz2003/music_app_v2_server_iitm.git
+```
+
 > Pre-requisite: python, Node.js, redis
 
 ```bash
