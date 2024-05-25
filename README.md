@@ -8,6 +8,10 @@
 | Backend | Python, flask, redis, celery |
 | Database | SQLite3 |
 
+## Demo Video
+
+[Watch Project Demo Video](https://drive.google.com/file/d/1ExsFf6PAdwW1jhKo1ZA4N1DRaIYdjlz0/view?usp=share_link)
+
 ## How to run the app
 
 > Pre-requisite: git installed in your system
